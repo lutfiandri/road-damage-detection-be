@@ -3,6 +3,8 @@ import cors from 'cors';
 import mongoose from 'mongoose';
 import getenv from './utils/helpers/getenv';
 
+import roadRoute from './routes/roadRoute';
+
 const app = express();
 
 app.use(cors());
@@ -23,5 +25,7 @@ mongoose
 app.get('/', (req, res) => {
   res.send('road-damage-detection-be');
 });
+
+app.use('/roads', roadRoute);
 
 app.listen(5000, () => console.log('road-damage-detection-be started...'));
