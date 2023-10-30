@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import mongoose from 'mongoose';
 import getenv from './utils/helpers/getenv';
+import fileUpload from 'express-fileupload';
 
 import roadRoute from './routes/roadRoute';
 
@@ -10,6 +11,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(fileUpload());
 
 const MONGO_URI = getenv('MONGO_URI');
 

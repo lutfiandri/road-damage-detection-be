@@ -6,7 +6,7 @@ const roadScheme = new mongoose.Schema(
     videoUrl: String,
     locations: [
       {
-        frame: Number,
+        microTime: Number,
         latitude: Number,
         longitude: Number,
       },
