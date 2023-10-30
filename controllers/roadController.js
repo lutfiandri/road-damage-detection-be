@@ -48,11 +48,12 @@ export const getRoad = async (req, res) => {
 
 export const updateRoad = async (req, res) => {
   try {
-    const { title } = req?.body;
+    const { title, locations } = req?.body;
     const { id } = req?.params;
 
     const result = await Road.findByIdAndUpdate(id, {
       title,
+      locations,
     });
 
     if (!result) {
