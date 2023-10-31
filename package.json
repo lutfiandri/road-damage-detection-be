@@ -4,8 +4,11 @@
   "main": "index.js",
   "repository": "git@github.com:lutfiandri/road-damage-detection-be.git",
   "author": "lutfiandri <lutfiandri232@gmail.com>",
+  "type": "module",
   "scripts": {
-    "dev": "bun --hot run index.js"
+    "dev": "bun --hot run index.js",
+    "start": "bun run index.js",
+    "start:node": "node index.js"
   },
   "license": "MIT",
   "dependencies": {

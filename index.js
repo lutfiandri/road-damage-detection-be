@@ -1,10 +1,10 @@
 import express from 'express';
 import cors from 'cors';
 import mongoose from 'mongoose';
-import getenv from './utils/helpers/getenv';
+import getenv from './utils/helpers/getenv.js';
 import fileUpload from 'express-fileupload';
 
-import roadRoute from './routes/roadRoute';
+import roadRoute from './routes/roadRoute.js';
 
 const app = express();
 

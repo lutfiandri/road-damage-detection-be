@@ -1,4 +1,4 @@
-import Road from '../models/road';
+import Road from '../models/road.js';
 import csv from 'fast-csv';
 
 export const createRoad = async (req, res) => {
