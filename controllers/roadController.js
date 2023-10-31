@@ -63,7 +63,12 @@ export const updateRoad = async (req, res) => {
     }
 
     // after success
-    result.title = title;
+    if (title) {
+      result.title = title;
+    }
+    if (locations) {
+      result.locations = locations;
+    }
 
     return res.json({ success: true, data: result });
   } catch (error) {
@@ -109,6 +114,8 @@ export const updateLocationsCsv = async (req, res) => {
         }).catch((error) =>
           res.status(500).json({ success: false, message: error.message })
         );
+
+        result.locations = locations;
 
         if (!result) {
           return res
