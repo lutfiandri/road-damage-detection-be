@@ -11,9 +11,25 @@ const roadScheme = new mongoose.Schema(
         longitude: Number,
       },
     ],
+    detectionMeta: {
+      startedAt: Date,
+      endedAt: Date,
+      status: {
+        type: String,
+        enum: ['not-started', 'processing', 'done'],
+        default: 'not-started',
+      },
+      errorMessage: String,
+      totalDamage: Number,
+    },
     detections: [
       {
         frame: Number,
+        time: Number,
+        location: {
+          latitude: Number,
+          longitude: Number,
+        },
         predictions: [
           {
             class: String,
@@ -27,7 +43,6 @@ const roadScheme = new mongoose.Schema(
         ],
       },
     ],
-    totalDetection: Number,
   },
   { timestamps: true }
 );

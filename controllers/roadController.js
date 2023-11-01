@@ -1,5 +1,11 @@
 import Road from '../models/road.js';
 import csv from 'fast-csv';
+import axios from 'axios';
+import getenv from '../utils/helpers/getenv.js';
+
+const BE_ML_BASEURL = getenv('BE_ML_BASEURL');
+
+console.log(BE_ML_BASEURL);
 
 export const createRoad = async (req, res) => {
   try {
@@ -13,6 +19,52 @@ export const createRoad = async (req, res) => {
 
     const result = await newRoad.save();
 
+    // inference when creating
+    (async function () {
+      try {
+        const startedAt = new Date();
+        const update1Result = await Road.findByIdAndUpdate(result.id, {
+          detectionMeta: {
+            startedAt: startedAt,
+            status: 'processing',
+          },
+        });
+        const mlResult = await axios.post(BE_ML_BASEURL + '/api/predict', {
+          url: videoUrl,
+          prediction_fps: 1,
+        });
+        let totalDamage = 0;
+
+        const detections = mlResult.data.result?.map((r) => {
+          totalDamage += r?.prediction?.length;
+
+          // TODO: get locations
+          return {
+            ...r,
+            predictions: r?.prediction,
+            location: {
+              latitude: 123,
+              longitude: 456,
+            },
+          };
+        });
+
+        await Road.findByIdAndUpdate(result.id, {
+          detectionMeta: {
+            startedAt: startedAt,
+            endedAt: new Date(),
+            status: 'done',
+            totalDamage: totalDamage,
+          },
+          detections,
+        });
+
+        console.log('inference success');
+      } catch (error) {
+        console.error('error on inference', error.message);
+      }
+    })();
+
     return res.status(201).json({ success: true, data: result });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
@@ -21,7 +73,9 @@ export const createRoad = async (req, res) => {
 
 export const getRoads = async (req, res) => {
   try {
-    const result = await Road.find({}, { locations: 0, detections: 0 });
+    const result = await Road.find({}, { locations: 0, detections: 0 }).sort({
+      createdAt: -1,
+    });
 
     return res.json({ success: true, data: result });
   } catch (error) {
