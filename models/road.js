@@ -16,7 +16,7 @@ const roadScheme = new mongoose.Schema(
       endedAt: Date,
       status: {
         type: String,
-        enum: ['not-started', 'processing', 'done'],
+        enum: ['not-started', 'processing', 'done', 'error'],
         default: 'not-started',
       },
       errorMessage: String,

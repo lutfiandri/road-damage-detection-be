@@ -21,8 +21,8 @@ export const createRoad = async (req, res) => {
 
     // inference when creating
     (async function () {
+      const startedAt = new Date();
       try {
-        const startedAt = new Date();
         const update1Result = await Road.findByIdAndUpdate(result.id, {
           detectionMeta: {
             startedAt: startedAt,
@@ -51,18 +51,28 @@ export const createRoad = async (req, res) => {
           totalDamage: totalDamage,
         };
 
-        const roadDetectionResult = await Road.findByIdAndUpdate(result.id, {
+        await Road.findByIdAndUpdate(result.id, {
           detectionMeta,
           detections,
         });
 
-        roadDetectionResult.detectionMeta = detectionMeta;
-        roadDetectionResult.detections = detections;
+        const roadDetectionResult = await Road.findById(result.id);
 
         await syncLocationDetection(roadDetectionResult);
 
         console.log('inference success');
       } catch (error) {
+        const detectionMeta = {
+          startedAt: startedAt,
+          endedAt: new Date(),
+          status: 'error',
+          errorMessage: error.message,
+        };
+
+        await Road.findByIdAndUpdate(result.id, {
+          detectionMeta,
+        });
+
         console.error('error on inference', error.message);
       }
     })();
@@ -210,11 +220,32 @@ export const deleteRoad = async (req, res) => {
   }
 };
 
+// download csv
+// export const downloadRoadsCsv = async (req, res) => {
+//   try {
+//     const projection = { locations: 0, detections: 0 };
+//     const result = await Road.find({}, projection).sort({
+//       createdAt: -1,
+//     });
+
+//     return res.json({ success: true, data: result });
+//   } catch (error) {
+//     return res.status(500).json({ success: false, message: error.message });
+//   }
+// };
+
 // utils function
 const syncLocationDetection = async (road) => {
-  if (!road.detections || !road?.locations) {
+  if (!road?.detections?.length || !road?.locations?.length) {
+    console.log('not sync locations');
     return road;
   }
+
+  console.log(
+    'sync locations',
+    road?.detections?.length,
+    road?.locations?.length
+  );
 
   const times = road.detections.map((detection) => detection.time);
   const locationBody = {
