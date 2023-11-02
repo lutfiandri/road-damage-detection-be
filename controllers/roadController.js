@@ -275,9 +275,62 @@ export const downloadRoadsCsv = async (req, res) => {
     const csvArray = [header, ...rows];
     const csv = csvArray.map((row) => row.join(',')).join('\n');
 
-    return res.attachment('trial.csv').send(csv);
+    return res.attachment('RDD - Kerusakan Jalan.csv').send(csv);
 
     // return res.json({ success: true, data: result });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const downloadRoadCsv = async (req, res) => {
+  try {
+    const { id } = req?.params;
+    const road = await Road.findById(id);
+
+    if (!road) {
+      return res
+        .status(404)
+        .json({ success: false, message: `road ${id} not found` });
+    }
+
+    const header = [
+      'No',
+      'Frame',
+      'Waktu Detik',
+      'Latitude',
+      'Longitude',
+      'Jenis Kerusakan',
+    ];
+
+    const predictions = road?.detections?.reduce((acc, cur) => {
+      const newPredictions = cur.predictions?.map((p) => ({
+        ...p._doc,
+        frame: cur.frame,
+        time: cur.time,
+        location: cur.location,
+      }));
+      console.log('new predictions', newPredictions);
+      return [...acc, ...newPredictions];
+    }, []);
+
+    console.log(predictions);
+
+    const rows = predictions?.map((prediction, i) => {
+      return [
+        i + 1,
+        prediction?.frame,
+        prediction?.time,
+        prediction?.location?.latitude,
+        prediction?.location?.longitude,
+        prediction?.class,
+      ];
+    });
+
+    const csvArray = [header, ...rows];
+    const csv = csvArray.map((row) => row.join(',')).join('\n');
+
+    return res.attachment(`RDD - ${road.title}.csv`).send(csv);
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   }

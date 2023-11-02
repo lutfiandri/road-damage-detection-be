@@ -4,6 +4,7 @@ import * as controller from '../controllers/roadController.js';
 const router = express.Router();
 
 router.get('/csv', controller.downloadRoadsCsv);
+router.get('/:id/csv', controller.downloadRoadCsv);
 
 router.post('/', controller.createRoad);
 router.get('/', controller.getRoads);
