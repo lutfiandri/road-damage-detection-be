@@ -75,7 +75,15 @@ export const createRoad = async (req, res) => {
 
 export const getRoads = async (req, res) => {
   try {
-    const result = await Road.find({}, { locations: 0, detections: 0 }).sort({
+    const projection = { locations: 0, detections: 0 };
+    if (req.query?.withLocations == 1) {
+      delete projection.locations;
+    }
+    if (req.query?.withDetections == 1) {
+      delete projection.detections;
+    }
+
+    const result = await Road.find({}, projection).sort({
       createdAt: -1,
     });
 
