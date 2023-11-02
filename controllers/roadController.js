@@ -171,13 +171,15 @@ export const updateLocationsCsv = async (req, res) => {
 
         result.locations = locations;
 
+        const syncLocationResult = await syncLocationDetection(result);
+
         if (!result) {
           return res
             .status(404)
             .json({ success: false, message: `road ${id} not found` });
         }
 
-        return res.json({ success: true, data: result });
+        return res.json({ success: true, data: syncLocationResult });
       });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
@@ -194,4 +196,45 @@ export const deleteRoad = async (req, res) => {
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   }
+};
+
+// utils function
+const syncLocationDetection = async (road) => {
+  if (road?.detections) {
+    const times = road.detections.map((detection) => detection.time);
+    const locationBody = {
+      locations: road.locations,
+      times: times,
+    };
+    const locationResult = await axios.post(
+      BE_ML_BASEURL + '/api/location/synchronize',
+      locationBody
+    );
+
+    const locationData = locationResult?.data?.locations;
+
+    const newDetections = road.detections.map((detection, i) => {
+      return {
+        ...detection,
+        location: {
+          latitude: locationData[i].latitude,
+          longitude: locationData[i].longitude,
+        },
+      };
+    });
+
+    await Road.findByIdAndUpdate(road.id, {
+      detections: newDetections,
+    }).catch((error) =>
+      res.status(500).json({ success: false, message: error.message })
+    );
+
+    road.detections = newDetections;
+
+    console.log(road);
+
+    return road;
+  }
+
+  return road;
 };
