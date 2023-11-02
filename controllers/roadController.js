@@ -36,7 +36,7 @@ export const createRoad = async (req, res) => {
         let totalDamage = 0;
 
         const detections = mlResult.data.result?.map((r) => {
-          totalDamage += r?.prediction?.length;
+          totalDamage += r?.prediction?.length ? r?.prediction?.length : 0;
 
           return {
             ...r,
@@ -223,7 +223,7 @@ export const deleteRoad = async (req, res) => {
 // download csv
 export const downloadRoadsCsv = async (req, res) => {
   try {
-    const projection = { locations: 0, detections: 0 };
+    const projection = { locations: 0 };
     const roads = await Road.find({}, projection).sort({
       createdAt: -1,
     });
@@ -233,15 +233,41 @@ export const downloadRoadsCsv = async (req, res) => {
       'Waktu Unggah',
       'Judul',
       'Link Video',
+      'Jumlah Pothole',
+      'Jumlah Alligator Crack',
+      'Jumlah Lateral Crack',
+      'Jumlah Longitudinal Crack',
       'Total Kerusakan',
     ];
 
     const rows = roads.map((road, i) => {
+      const predictions = road?.detections?.reduce(
+        (acc, cur) => [...acc, ...cur.predictions],
+        []
+      );
+
+      const potholes = predictions.filter(
+        (prediction) => prediction.classId == 0
+      );
+      const alligatorCracks = predictions.filter(
+        (prediction) => prediction.classId == 1
+      );
+      const lateralCracks = predictions.filter(
+        (prediction) => prediction.classId == 2
+      );
+      const longitudinalCracks = predictions.filter(
+        (prediction) => prediction.classId == 3
+      );
+
       return [
         i + 1,
         road?.createdAt?.toISOString(),
         road?.title,
         road?.videoUrl,
+        potholes.length,
+        alligatorCracks.length,
+        lateralCracks.length,
+        longitudinalCracks.length,
         road?.detectionMeta?.totalDamage,
       ];
     });
