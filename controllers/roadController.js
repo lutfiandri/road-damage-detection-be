@@ -221,18 +221,41 @@ export const deleteRoad = async (req, res) => {
 };
 
 // download csv
-// export const downloadRoadsCsv = async (req, res) => {
-//   try {
-//     const projection = { locations: 0, detections: 0 };
-//     const result = await Road.find({}, projection).sort({
-//       createdAt: -1,
-//     });
+export const downloadRoadsCsv = async (req, res) => {
+  try {
+    const projection = { locations: 0, detections: 0 };
+    const roads = await Road.find({}, projection).sort({
+      createdAt: -1,
+    });
 
-//     return res.json({ success: true, data: result });
-//   } catch (error) {
-//     return res.status(500).json({ success: false, message: error.message });
-//   }
-// };
+    const header = [
+      'No',
+      'Waktu Unggah',
+      'Judul',
+      'Link Video',
+      'Total Kerusakan',
+    ];
+
+    const rows = roads.map((road, i) => {
+      return [
+        i + 1,
+        road?.createdAt?.toISOString(),
+        road?.title,
+        road?.videoUrl,
+        road?.detectionMeta?.totalDamage,
+      ];
+    });
+
+    const csvArray = [header, ...rows];
+    const csv = csvArray.map((row) => row.join(',')).join('\n');
+
+    return res.attachment('trial.csv').send(csv);
+
+    // return res.json({ success: true, data: result });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
 
 // utils function
 const syncLocationDetection = async (road) => {
