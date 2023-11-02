@@ -38,26 +38,28 @@ export const createRoad = async (req, res) => {
         const detections = mlResult.data.result?.map((r) => {
           totalDamage += r?.prediction?.length;
 
-          // TODO: get locations
           return {
             ...r,
             predictions: r?.prediction,
-            location: {
-              latitude: 123,
-              longitude: 456,
-            },
           };
         });
 
-        await Road.findByIdAndUpdate(result.id, {
-          detectionMeta: {
-            startedAt: startedAt,
-            endedAt: new Date(),
-            status: 'done',
-            totalDamage: totalDamage,
-          },
+        const detectionMeta = {
+          startedAt: startedAt,
+          endedAt: new Date(),
+          status: 'done',
+          totalDamage: totalDamage,
+        };
+
+        const roadDetectionResult = await Road.findByIdAndUpdate(result.id, {
+          detectionMeta,
           detections,
         });
+
+        roadDetectionResult.detectionMeta = detectionMeta;
+        roadDetectionResult.detections = detections;
+
+        await syncLocationDetection(roadDetectionResult);
 
         console.log('inference success');
       } catch (error) {
@@ -124,7 +126,9 @@ export const updateRoad = async (req, res) => {
       result.locations = locations;
     }
 
-    return res.json({ success: true, data: result });
+    const syncLocationResult = await syncLocationDetection(result);
+
+    return res.json({ success: true, data: syncLocationResult });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   }
