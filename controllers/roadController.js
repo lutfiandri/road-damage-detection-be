@@ -361,14 +361,23 @@ const syncLocationDetection = async (road) => {
 
   const locationData = locationResult?.data?.locations;
 
+  // const newDetections = road.detections.map((detection, i) => {
+  //   return {
+  //     ...detection,
+  //     location: {
+  //       latitude: locationData[i].latitude,
+  //       longitude: locationData[i].longitude,
+  //     },
+  //   };
+  // });
+
   const newDetections = road.detections.map((detection, i) => {
-    return {
-      ...detection,
-      location: {
-        latitude: locationData[i].latitude,
-        longitude: locationData[i].longitude,
-      },
+    const newDetection = detection;
+    newDetection.location = {
+      latitude: locationData[i].latitude,
+      longitude: locationData[i].longitude,
     };
+    return newDetection;
   });
 
   await Road.findByIdAndUpdate(road.id, {
